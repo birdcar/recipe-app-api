@@ -16,4 +16,4 @@ jobs:
       - run: pip install docker-compose
       - name: Test the app using Docker Compose
         uses: actions/checkout@v1
-      - run: docker-compose run app sh -c "python manage.py test"
+      - run: docker-compose run app sh -c "python manage.py test && flake8"
