@@ -21,8 +21,12 @@ class PublicUsersApiTests(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        self.valid_user = {
+        self.valid_user_new = {
             'name': 'Testy McTest',
+            'email': 'test@example.com',
+            'password': 'testpass'
+        }
+        self.valid_user_creds = {
             'email': 'test@example.com',
             'password': 'testpass'
         }
@@ -35,21 +39,21 @@ class PublicUsersApiTests(TestCase):
         """
         User should be created when valid payload is provided
         """
-        res = self.client.post(CREATE_USER_URL, self.valid_user)
+        res = self.client.post(CREATE_USER_URL, self.valid_user_new)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         user = get_user_model().objects.get(**res.data)
 
-        self.assertTrue(user.check_password(self.valid_user['password']))
+        self.assertTrue(user.check_password(self.valid_user_new['password']))
         self.assertNotIn('password', res.data)
 
     def test_duplicate_user_failure(self):
         """
         User creation should fail when duplicate user exists
         """
-        create_user(**self.valid_user)
-        res = self.client.post(CREATE_USER_URL, self.valid_user)
+        create_user(**self.valid_user_new)
+        res = self.client.post(CREATE_USER_URL, self.valid_user_new)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -69,8 +73,8 @@ class PublicUsersApiTests(TestCase):
         """
         A token should be created when a user provides valid credentials
         """
-        create_user(**self.valid_user)
-        res = self.client.post(TOKEN_URL, self.valid_user)
+        create_user(**self.valid_user_new)
+        res = self.client.post(TOKEN_URL, self.valid_user_creds)
 
         self.assertIn('token', res.data)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
@@ -79,7 +83,7 @@ class PublicUsersApiTests(TestCase):
         """
         A token should not be created when a user provides invalid credentials
         """
-        create_user(**self.valid_user)
+        create_user(**self.valid_user_new)
         res = self.client.post(TOKEN_URL, self.invalid_user_password)
 
         self.assertNotIn('token', res.data)
@@ -89,7 +93,7 @@ class PublicUsersApiTests(TestCase):
         """
         A token should not be created or if a user does not exist
         """
-        res = self.client.post(TOKEN_URL, self.valid_user)
+        res = self.client.post(TOKEN_URL, self.valid_user_new)
 
         self.assertNotIn('token', res.data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
