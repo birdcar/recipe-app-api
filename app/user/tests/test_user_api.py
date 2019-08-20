@@ -20,32 +20,33 @@ class PublicUsersApiTests(TestCase):
 
     def setUp(self):
         self.client = APIClient()
+        self.good_user_obj = {
+            'name': 'Testy McTest',
+            'email': 'test@example.com',
+            'password': 'testpass'
+        }
+        self.bad_user_password_obj = {
+            'email': 'test@example.com',
+            'password': 'pw'
+        }
 
     def test_create_valid_user_success(self):
         """
         User should be created when valid payload is provided
         """
-        payload = {
-            'name': 'Testy McTest',
-            'email': 'test@example.com',
-            'password': 'testpass',
-        }
-
-        res = self.client.post(CREATE_USER_URL, payload)
+        res = self.client.post(CREATE_USER_URL, self.good_user_obj)
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         user = get_user_model().objects.get(**res.data)
-        self.assertTrue(user.check_password(payload['password']))
+        self.assertTrue(user.check_password(self.good_user_obj['password']))
         self.assertNotIn('password', res.data)
 
     def test_duplicate_user_failure(self):
         """
         User creation should fail when duplicate user exists
         """
-        payload = {'email': 'test@example.com', 'password': 'testpass'}
-
-        create_user(**payload)
-        res = self.client.post(CREATE_USER_URL, payload)
+        create_user(**self.good_user_obj)
+        res = self.client.post(CREATE_USER_URL, self.good_user_obj)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_password_length_failure(self):
@@ -53,10 +54,9 @@ class PublicUsersApiTests(TestCase):
         User creation should fail when a password of insufficient length is
         provided
         """
-        payload = {'email': 'test@example.com', 'password': 'pw'}
-
-        res = self.client.post(CREATE_USER_URL, payload)
+        res = self.client.post(CREATE_USER_URL, self.bad_user_password_obj)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-        user_exists = get_user_model().objects.filter(email=payload['email'])
+        user_exists = get_user_model().objects.filter(
+            email=self.bad_user_password_obj['email'])
         self.assertFalse(user_exists)
