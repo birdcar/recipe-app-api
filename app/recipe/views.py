@@ -6,7 +6,9 @@ from core.models import Tag
 from .serializers import TagSerializer
 
 
-class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+class TagViewSet(mixins.ListModelMixin,
+                 mixins.CreateModelMixin,
+                 viewsets.GenericViewSet):
     """
     List views for the Tag resource
     """
@@ -20,3 +22,9 @@ class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         Return tags for the current authenticated user only
         """
         return self.queryset.filter(user=self.request.user).order_by('-name')
+
+    def perform_create(self, serializer):
+        """
+        Create a new Tag
+        """
+        serializer.save(user=self.request.user)
