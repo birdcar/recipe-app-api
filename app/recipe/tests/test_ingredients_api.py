@@ -100,3 +100,24 @@ class PrivateIngredientsApiTests(TestCase):
         self.assertTrue(status.is_success(res.status_code))
         self.assertEqual(len(res.data), 1)
         self.assertEqual(res.data[0]['name'], my_ingredient.name)
+
+    def test_ingredient_create_success(self):
+        """
+        User is able to create new ingredients
+        """
+        res = self.client.post(INGREDIENTS_URL, self.payload_KG)
+        exists = Ingredient.objects.filter(
+            user=self.user,
+            name=self.payload_KG['name']
+        ).exists()
+
+        self.assertTrue(status.is_success(res.status_code))
+        self.assertTrue(exists)
+
+    def test_ingredient_missing_name_create_failure(self):
+        """
+        User cannot create new ingredients without a name
+        """
+        res = self.client.post(INGREDIENTS_URL, self.payload_KB_name)
+
+        self.assertTrue(status.is_client_error(res.status_code))
