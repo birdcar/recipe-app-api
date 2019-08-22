@@ -38,6 +38,8 @@ class PrivateTagsApiTests(TestCase):
             password='testpass',
             name='Testy McTester'
         )
+        self.tag_payload_good = {'name': 'Test tag'}
+        self.tag_payload_bad = {'name': ''}
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
@@ -72,3 +74,23 @@ class PrivateTagsApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 1)
         self.assertEqual(res.data[0]['name'], tag.name)
+
+    def test_create_tag_success(self):
+        """
+        Users can create new tags
+        """
+        res = self.client.post(TAGS_URL, self.tag_payload_good)
+        exists = Tag.objects.filter(
+            user=self.user,
+            name=self.tag_payload_good['name']
+        ).exists()
+        self.assertTrue(status.is_success(res.status_code))
+        self.assertTrue(exists)
+
+    def test_create_tag_missing_name_failure(self):
+        """
+        Tag.name cannot be an empty string
+        """
+        res = self.client.post(TAGS_URL, self.tag_payload_bad)
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
