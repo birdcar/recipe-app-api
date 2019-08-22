@@ -55,3 +55,14 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(tag), tag.name)
+
+    def test_ingredient_dunder_str(self):
+        """
+        The __str__ method for Ingredients should be properly implemented
+        """
+        ingredient = models.Ingredient.objects.create(
+            user=sample_user(),
+            name="Cucumber"
+        )
+
+        self.assertEqual(str(ingredient), ingredient.name)
